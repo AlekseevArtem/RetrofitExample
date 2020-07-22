@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">RetrofitExample</string>
+    <string name="for_example">Text for example</string>
+    <string name="user_id">User ID:</string>
+    <string name="id">ID:</string>
+    <string name="title">Title:</string>
+    <string name="text">Text:</string>
 </resources>
