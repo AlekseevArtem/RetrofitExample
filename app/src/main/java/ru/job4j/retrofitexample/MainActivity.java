@@ -39,31 +39,6 @@ public class MainActivity extends AppCompatActivity {
                 .build();
         JsonPlaceHolderApi jsonPlaceHolderApi = retrofit.create(JsonPlaceHolderApi.class);
         Call<List<Post>> call = jsonPlaceHolderApi.getPosts();
-//        TextView result = findViewById(R.id.text_view_result);
-//        Call<List<Comment>> call = jsonPlaceHolderApi.getComments();
-//
-//        call.enqueue(new Callback<List<Comment>>() {
-//            @Override
-//            public void onResponse(Call<List<Comment>> call, Response<List<Comment>> response) {
-//                if (!response.isSuccessful()) {
-//                    result.setText((String.format("Code: %s", response.code())));
-//                    return;
-//                }
-//                List<Comment> comments = response.body();
-//                for(Comment comment : comments) {
-//                    String content = String.format(
-//                            "PostID: %s \n ID: %s \n Name ID: %s \n Email: %s \n Text %s \n\n",
-//                            comment.getPostId(),comment.getId(),comment.getName(),comment.getEmail(),comment.getText()
-//                    );
-//                    result.append(content);
-//                }
-//            }
-//
-//            @Override
-//            public void onFailure(Call<List<Comment>> call, Throwable t) {
-//                result.setText(t.getMessage());
-//            }
-//        });
 
         call.enqueue(new Callback<List<Post>>() {
             @Override
