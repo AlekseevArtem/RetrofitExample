@@ -1,6 +1,7 @@
 package ru.job4j.retrofitexample;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -20,7 +21,8 @@ import java.util.List;
 import at.markushi.ui.CircleButton;
 
 public class MainActivity extends AppCompatActivity implements RetrofitForJSON.getAllPostsFromAPI,
-        RetrofitForJSON.addNewPostIntoAPI, RetrofitForJSON.editPostInAPI, RetrofitForJSON.deletePostInAPI {
+        RetrofitForJSON.addNewPostIntoAPI, RetrofitForJSON.editPostInAPI,
+        RetrofitForJSON.deletePostInAPI, RetrofitForJSON.allActionsWithAPI {
     private RecyclerView mViewsForPosts;
     private List<Post> posts;
     private RetrofitForJSON api;
@@ -62,11 +64,11 @@ public class MainActivity extends AppCompatActivity implements RetrofitForJSON.g
     }
 
     private void editPost() {
-        api.editPost();
+        api.editPost(1, 1, "title test", "text test");
     }
 
     private void deletePost() {
-        api.deletePost();
+        api.deletePost(1);
     }
 
     private void updateUI() {
@@ -74,57 +76,57 @@ public class MainActivity extends AppCompatActivity implements RetrofitForJSON.g
     }
 
     @Override
-    public void successGetAllPostsFromAPI(boolean response, int code, List<Post> body) {
-        if (!response) {
-            Toast.makeText(getApplicationContext(), code, Toast.LENGTH_SHORT).show();
-            return;
+    public void successGetAllPostsFromAPI(boolean response, List<Post> body, int code) {
+        if (response) {
+            this.posts = body;
+            updateUI();
+        } else {
+            toastForAnswerWithError(code);
         }
-        this.posts = body;
-        updateUI();
     }
 
     @Override
-    public void failedGetAllPostsFromAPI(String t) {
-        Toast.makeText(getApplicationContext(), t, Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void successAddNewPostIntoAPI(boolean response, Post post) {
+    public void successAddNewPostIntoAPI(boolean response, Post post, int code) {
         if (response) {
             int position = post.getId() - 1;
             posts.add(position, post);
             mViewsForPosts.getAdapter().notifyItemInserted(position);
+        } else {
+            toastForAnswerWithError(code);
         }
     }
 
     @Override
-    public void failedAddNewPostIntoAPI(String t) {
-        Toast.makeText(getApplicationContext(), t, Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void successEditPostInAPI(boolean response, Post post) {
+    public void successEditPostInAPI(boolean response, Post post, int code) {
         if (response) {
             int position = post.getId() - 1;
             posts.add(position, post);
             mViewsForPosts.getAdapter().notifyItemChanged(position);
+        } else {
+            toastForAnswerWithError(code);
         }
     }
 
     @Override
-    public void failedEditPostInAPI(String t) {
-        Toast.makeText(getApplicationContext(), t, Toast.LENGTH_SHORT).show();
+    public void successDeletePostInAPI(boolean response, int code) {
+        if (response) {
+            posts.remove(0);
+            mViewsForPosts.getAdapter().notifyItemRemoved(0);
+        } else {
+            toastForAnswerWithError(code);
+        }
+    }
+
+    private void toastForAnswerWithError(int code) {
+        Toast.makeText(getApplicationContext(),
+                String.format("Ошибка, статус ответа: %s", code), Toast.LENGTH_SHORT).show();
     }
 
     @Override
-    public void successDeletePostInAPI(boolean response) {
-        posts.remove(0);
-        mViewsForPosts.getAdapter().notifyItemRemoved(0);
-    }
-
-    @Override
-    public void failedDeletePostInAPI(String t) {
-        Toast.makeText(getApplicationContext(), t, Toast.LENGTH_SHORT).show();
+    public void failedAnswerFromAPI(String response) {
+        Intent intent = new Intent(MainActivity.this, ErrorActivity.class);
+        intent.putExtra("Error", response);
+        startActivity(intent);
     }
 
     private class PostsHolder extends RecyclerView.ViewHolder {

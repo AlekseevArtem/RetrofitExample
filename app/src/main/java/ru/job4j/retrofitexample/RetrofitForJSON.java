@@ -6,6 +6,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
+import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -16,33 +18,42 @@ public class RetrofitForJSON {
     private JsonPlaceHolderApi jsonPlaceHolderApi;
     private Context callback;
 
-    public RetrofitForJSON (Context callback) {
-        this.callback = callback;
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://jsonplaceholder.typicode.com/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-        jsonPlaceHolderApi = retrofit.create(JsonPlaceHolderApi.class);
-    }
-
     public interface getAllPostsFromAPI {
-        void successGetAllPostsFromAPI(boolean response, int code, List<Post> body);
-        void failedGetAllPostsFromAPI(String t);
+        void successGetAllPostsFromAPI(boolean response, List<Post> body, int code);
     }
 
     public interface addNewPostIntoAPI {
-        void successAddNewPostIntoAPI(boolean response, Post post);
-        void failedAddNewPostIntoAPI(String t);
+        void successAddNewPostIntoAPI(boolean response, Post post, int code);
     }
 
     public interface editPostInAPI {
-        void successEditPostInAPI(boolean response, Post post);
-        void failedEditPostInAPI(String t);
+        void successEditPostInAPI(boolean response, Post post, int code);
     }
 
     public interface deletePostInAPI {
-        void successDeletePostInAPI(boolean response);
-        void failedDeletePostInAPI(String t);
+        void successDeletePostInAPI(boolean response, int code);
+    }
+
+    public interface allActionsWithAPI {
+        void failedAnswerFromAPI(String response);
+    }
+
+    public RetrofitForJSON(Context callback) {
+        this.callback = callback;
+        HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
+        if(BuildConfig.DEBUG) {
+            interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+        } else {
+            interceptor.setLevel(HttpLoggingInterceptor.Level.BASIC);
+        }
+        OkHttpClient client = new OkHttpClient.Builder()
+                .addInterceptor(interceptor).build();
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://jsonplaceholder.typicode.com/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .client(client)  // logs
+                .build();
+        jsonPlaceHolderApi = retrofit.create(JsonPlaceHolderApi.class);
     }
 
     public void getAllPosts() {
@@ -51,13 +62,13 @@ public class RetrofitForJSON {
             @Override
             public void onResponse(@NotNull Call<List<Post>> call, @NotNull Response<List<Post>> response) {
                 ((getAllPostsFromAPI)callback)
-                        .successGetAllPostsFromAPI(response.isSuccessful(),response.code(),response.body());
+                        .successGetAllPostsFromAPI(response.isSuccessful(), response.body(), response.code());
             }
 
             @Override
             public void onFailure(@NotNull Call<List<Post>> call, @NotNull Throwable t) {
-                ((getAllPostsFromAPI)callback)
-                        .failedGetAllPostsFromAPI(t.getMessage());
+                ((allActionsWithAPI)callback)
+                        .failedAnswerFromAPI(t.getMessage());
             }
         });
     }
@@ -68,48 +79,48 @@ public class RetrofitForJSON {
             @Override
             public void onResponse(@NotNull Call<Post> call, @NotNull Response<Post> response) {
                 ((addNewPostIntoAPI)callback)
-                        .successAddNewPostIntoAPI(response.isSuccessful(), response.body());
+                        .successAddNewPostIntoAPI(response.isSuccessful(), response.body(), response.code());
             }
 
             @Override
             public void onFailure(@NotNull Call<Post> call, @NotNull Throwable t) {
-                ((addNewPostIntoAPI)callback)
-                        .failedAddNewPostIntoAPI(t.toString());
+                ((allActionsWithAPI)callback)
+                        .failedAnswerFromAPI(t.getMessage());
             }
         });
     }
 
-    public void editPost() {
-        Post post = new Post(1, "title test", "text test");
-        Call<Post> call = jsonPlaceHolderApi.putPost(1, post);
+    public void editPost(int id, int userId, String title, String text) {
+        Post post = new Post(userId, title, text);
+        Call<Post> call = jsonPlaceHolderApi.putPost(id, post);
         call.enqueue(new Callback<Post>() {
             @Override
             public void onResponse(@NotNull Call<Post> call, @NotNull Response<Post> response) {
                 ((editPostInAPI)callback)
-                        .successEditPostInAPI(response.isSuccessful(), response.body());
+                        .successEditPostInAPI(response.isSuccessful(), response.body(), response.code());
             }
 
             @Override
             public void onFailure(@NotNull Call<Post> call, @NotNull Throwable t) {
-                ((editPostInAPI)callback)
-                        .failedEditPostInAPI(t.toString());
+                ((allActionsWithAPI)callback)
+                        .failedAnswerFromAPI(t.getMessage());
             }
         });
     }
 
-    public void deletePost() {
-        Call<Void> call = jsonPlaceHolderApi.deletePost(1);
+    public void deletePost(int id) {
+        Call<Void> call = jsonPlaceHolderApi.deletePost(id);
         call.enqueue(new Callback<Void>() {
             @Override
             public void onResponse(@NotNull Call<Void> call, @NotNull Response<Void> response) {
                 ((deletePostInAPI)callback)
-                        .successDeletePostInAPI(response.isSuccessful());
+                        .successDeletePostInAPI(response.isSuccessful(), response.code());
             }
 
             @Override
             public void onFailure(@NotNull Call<Void> call, @NotNull Throwable t) {
-                ((deletePostInAPI)callback)
-                        .failedDeletePostInAPI(t.toString());
+                ((allActionsWithAPI)callback)
+                        .failedAnswerFromAPI(t.getMessage());
             }
         });
     }
