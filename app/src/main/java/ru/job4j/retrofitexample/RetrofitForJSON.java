@@ -2,6 +2,8 @@ package ru.job4j.retrofitexample;
 
 import android.content.Context;
 
+import androidx.multidex.BuildConfig;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
